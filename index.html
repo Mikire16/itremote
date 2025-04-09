@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ITRemote - Удаленное управление компьютером</title>
+    <base href="./">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/styles.css">
+
+</head>
+<body>
+    <div class="container-fluid">
+        <header class="mb-4 bg-primary text-white p-3 header-container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1><i class="bi bi-pc-display"></i> ITRemote</h1>
+                    <p class="lead mb-0">Удаленное управление компьютером через браузер</p>
+                </div>
+                <div id="role-indicator" class="role-indicator">
+                    <span class="badge bg-secondary">Не подключено</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="row">
+            <div class="col-md-3">
+                <!-- Блок подключения с выбором роли -->
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-link-45deg"></i> Подключение</span>
+                        <span id="connectionStatus" class="status-badge offline">Отключено</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="role-selector mb-3">
+                            <label class="form-label">Выберите роль:</label>
+                            <div class="d-flex">
+                                <div class="role-option" id="role-broadcast">
+                                    <input type="radio" name="role" id="broadcast-role" value="broadcast" class="form-check-input" checked>
+                                    <label for="broadcast-role" class="role-label">
+                                        <i class="bi bi-cast"></i>
+                                        <span>Сервер</span>
+                                        <small>Транслирую свой экран</small>
+                                    </label>
+                                </div>
+                                <div class="role-option" id="role-control">
+                                    <input type="radio" name="role" id="control-role" value="control" class="form-check-input">
+                                    <label for="control-role" class="role-label">
+                                        <i class="bi bi-mouse"></i>
+                                        <span>Клиент</span>
+                                        <small>Управляю удаленным ПК</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="connectionCode" class="form-label"><i class="bi bi-key"></i> Код подключения</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="connectionCode" placeholder="Введите код">
+                                <button class="btn btn-outline-secondary" type="button" id="generateCodeBtn" title="Сгенерировать новый код"><i class="bi bi-arrow-repeat"></i></button>
+                            </div>
+                        </div>
+                                             
+                        <div class="d-grid gap-2">
+                            <button id="connectButton" class="btn btn-primary"><i class="bi bi-box-arrow-in-right"></i> Подключиться</button>
+                            <button id="disconnectButton" class="btn btn-danger" disabled><i class="bi bi-box-arrow-left"></i> Отключиться</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок состояния сессии -->
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-header">
+                        <i class="bi bi-info-circle"></i> Состояние сессии
+                    </div>
+                    <div class="card-body">
+                        <div class="session-info">
+                            <p><i class="bi bi-speedometer2"></i> FPS: <span id="currentFps" class="fw-bold">0</span></p>
+                            <p><i class="bi bi-clock-history"></i> Время сессии: <span id="sessionTime" class="fw-bold">00:00:00</span></p>
+                            <div id="clientInfo" class="d-none">
+                                <p><i class="bi bi-people"></i> Подключенных клиентов: <span id="clientCount" class="fw-bold">0</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Настройки качества и FPS -->
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-header">
+                        <i class="bi bi-sliders"></i> Настройки трансляции
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="quality" class="form-label d-flex justify-content-between">
+                                <span>Качество изображения</span>
+                                <span id="qualityValue" class="badge bg-primary">90</span>
+                            </label>
+                            <input type="range" class="form-range" min="1" max="100" value="90" id="quality">
+                        </div>
+                        <div class="mb-3">
+                            <label for="fps" class="form-label"><i class="bi bi-film"></i> Частота кадров</label>
+                            <select class="form-select" id="fps">
+                                <option value="60">60 FPS (высокая нагрузка)</option>
+                                <option value="30">30 FPS (средняя нагрузка)</option>
+                                <option value="15" selected>15 FPS (оптимально)</option>
+                                <option value="10">10 FPS (низкая нагрузка)</option>
+                                <option value="5">5 FPS (минимальная нагрузка)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="resolution" class="form-label"><i class="bi bi-display"></i> Разрешение</label>
+                            <select class="form-select" id="resolution">
+                                <option value="1920x1080">Full HD (1920x1080)</option>
+                                <option value="1280x720" selected>HD (1280x720)</option>
+                                <option value="640x480">SD (640x480)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок с логами -->
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <i class="bi bi-terminal"></i> Журнал событий
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="log" class="log-container"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="remote-screen-container shadow">
+                    <!-- Информация о действиях с удаленным экраном для клиента -->
+                    <div id="controlHelpOverlay" class="control-help-overlay d-none">
+                        <div class="control-help-content">
+                            <div class="help-item"><i class="bi bi-mouse"></i> ЛКМ для клика</div>
+                            <div class="help-item"><i class="bi bi-mouse2"></i> ПКМ для контекстного меню</div>
+                            <div class="help-item"><i class="bi bi-keyboard"></i> Клавиатура для ввода текста</div>
+                            <div class="help-item"><i class="bi bi-arrows-move"></i> Прокрутка колесиком</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Экран ожидания подключения -->
+                    <div id="loadingScreen" class="loading-screen">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Загрузка...</span>
+                        </div>
+                        <p>Ожидание подключения...</p>
+                        <div id="reconnectInfo" class="reconnect-info d-none">
+                            <p>Соединение потеряно, выполняется переподключение...</p>
+                            <div class="reconnect-progress">
+                                <div class="progress">
+                                    <div id="reconnectProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <button id="cancelReconnectBtn" class="btn btn-sm btn-light mt-2">Отменить</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Элементы отображения удаленного экрана -->
+                    <canvas id="remoteScreen" class="remote-screen"></canvas>
+                    <video id="remoteVideo" class="remote-screen" autoplay playsinline></video>
+                    
+                    <!-- Кнопка вызова клавиатуры для мобильных устройств -->
+                    <button id="keyboardToggleBtn" class="btn btn-sm btn-primary keyboard-toggle-btn d-none">
+                        <i class="bi bi-keyboard"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно переподключения -->
+    <div class="modal fade" id="reconnectModal" tabindex="-1" aria-labelledby="reconnectModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reconnectModalLabel">Соединение потеряно</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Произошел разрыв соединения. Что вы хотите сделать?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" id="tryReconnectBtn">Переподключиться</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/firebase-service.js"></script>
+    <script src="js/webrtc-service.js"></script>
+    <script src="js/screen-capture.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html> 
